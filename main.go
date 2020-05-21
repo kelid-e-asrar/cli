@@ -1,14 +1,15 @@
 package main
 
 import (
+	"cli/contract"
 	"flag"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
@@ -21,10 +22,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
-	log.Printf("connecting to %s", u.String())
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws?id=1", nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
@@ -51,8 +49,20 @@ func main() {
 		select {
 		case <-done:
 			return
-		case t := <-ticker.C:
-			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
+		case _ = <-ticker.C:
+			message, err := proto.Marshal(&contract.Event{
+				Type:   contract.EventType_UPDATE,
+				UserID: "mamad",
+				Data: &contract.Event_Update{
+					Update: &contract.EventUpdate{
+						Diff: "change",
+					},
+				},
+			})
+			if err != nil {
+				panic(err)
+			}
+			err = c.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
 				log.Println("write:", err)
 				return
