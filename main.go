@@ -3,6 +3,7 @@ package main
 import (
 	"cli/contract"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = fmt.Sprintf("ws://%s:%s/ws", ServerAddres, ServerPort)
 
 func main() {
 
@@ -22,7 +23,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	c, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws?id=1", nil)
+	c, _, err := websocket.DefaultDialer.Dial(addr+"?id=1", nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
