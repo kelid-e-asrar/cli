@@ -1,87 +1,61 @@
 package main
 
 import (
-	"cli/contract"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/gorilla/websocket"
-	"google.golang.org/protobuf/proto"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+func connect(addr string, userId string, deviceId string) (*websocket.Conn, error) {
+	c, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s?id=%s&deviceid=%s", addr, userId, deviceId), nil)
+	return c, err
+}
 
 func main() {
+	addr := flag.String("addr", "localhost:8080", "server ws address")
+	userId := flag.String("userId", "1", "userid")
+	deviceId := flag.String("deviceId", "1", "device id")
 
 	flag.Parse()
 	log.SetFlags(0)
 
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	c, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws?id=1", nil)
+	conn, err := connect(*addr, *userId, *deviceId)
 	if err != nil {
-		log.Fatal("dial:", err)
+		log.Fatal(err)
 	}
-	defer c.Close()
 
-	done := make(chan struct{})
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
 
-	go func() {
-		defer close(done)
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-			log.Printf("recv: %s", message)
-		}
-	}()
-
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	go handleIncomingEvent(conn)
 
 	for {
 		select {
-		case <-done:
-			return
-		case _ = <-ticker.C:
-			message, err := proto.Marshal(&contract.Event{
-				Type:   contract.EventType_UPDATE,
-				UserID: "mamad",
-				Data: &contract.Event_Update{
-					Update: &contract.EventUpdate{
-						Diff: "change",
-					},
-				},
-			})
-			if err != nil {
-				panic(err)
-			}
-			err = c.WriteMessage(websocket.TextMessage, message)
-			if err != nil {
-				log.Println("write:", err)
-				return
-			}
 		case <-interrupt:
-			log.Println("interrupt")
-
+			log.Println("Exiting ...")
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				log.Println("write close:", err)
 				return
 			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
 			return
 		}
+	}
+}
+
+func handleIncomingEvent(c *websocket.Conn) {
+	for {
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("error reading: ", err)
+			continue
+		}
+		log.Println(message)
 	}
 }
