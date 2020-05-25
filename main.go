@@ -10,20 +10,20 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func connect(addr string, userId string, deviceId string) (*websocket.Conn, error) {
-	c, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s?id=%s&deviceid=%s", addr, userId, deviceId), nil)
+func connect(addr string, userID string, deviceID string) (*websocket.Conn, error) {
+	c, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s?id=%s&deviceid=%s", addr, userID, deviceID), nil)
 	return c, err
 }
 
 func main() {
 	addr := flag.String("addr", "localhost:8080", "server ws address")
-	userId := flag.String("userId", "1", "userid")
-	deviceId := flag.String("deviceId", "1", "device id")
+	userID := flag.String("userId", "1", "userid")
+	deviceID := flag.String("deviceId", "1", "device id")
 
 	flag.Parse()
 	log.SetFlags(0)
 
-	conn, err := connect(*addr, *userId, *deviceId)
+	conn, err := connect(*addr, *userID, *deviceID)
 	if err != nil {
 		log.Fatal(err)
 	}
