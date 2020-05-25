@@ -1,2 +1,5 @@
 contract
 server
+contract/
+.vscode/
+.idea/
