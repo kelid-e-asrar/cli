@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 
+	prompt "github.com/c-bata/go-prompt"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,7 +17,32 @@ func connect(addr string, userID string, deviceID string) (*websocket.Conn, erro
 	return c, err
 }
 
+func executor(t string) {
+	if t == "bash" {
+		cmd := exec.Command("bash")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
+	}
+	return
+}
+
+func completer(t prompt.Document) []prompt.Suggest {
+	return []prompt.Suggest{
+		{Text: "bash"},
+	}
+}
+
 func main() {
+	{
+		p := prompt.New(
+			executor,
+			completer,
+		)
+		p.Run()
+	}
+
 	addr := flag.String("addr", "localhost:8080", "server ws address")
 	userID := flag.String("userId", "1", "userid")
 	deviceID := flag.String("deviceId", "1", "device id")
