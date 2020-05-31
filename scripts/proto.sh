@@ -9,7 +9,7 @@ fi
 
 for f in $(ls *.proto); do
     echo "$f";
-    protoc --go_out=plugins=grpc:. "$f" 2> /dev/null
+     protoc --go_out=. "$f"
 done
 
 
