@@ -18,6 +18,16 @@ var (
 	bucketName = []byte("passwords")
 )
 
+type entry struct {
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (e *entry) AsBytes() ([]byte, error) {
+	//TODO: encrypt data
+	return json.Marshal(e)
+}
 func commandHandler(ctx *context) func(string) {
 	return func(input string) {
 		cmds := strings.Split(input, " ")
@@ -26,19 +36,22 @@ func commandHandler(ctx *context) func(string) {
 			name := cmds[1]
 			ctx.db.View(func(tx *bbolt.Tx) error {
 				payload := tx.Bucket(bucketName).Get([]byte(name))
-				logrus.Println(payload)
+				m := entry{}
+				err := json.Unmarshal(payload, &m)
+				if err != nil {
+					return err
+				}
+				logrus.Printf("%+v", m)
 				return nil
 			})
 		case "set":
-			name := cmds[1]
-			username := cmds[2]
-			password := cmds[3]
+			e := &entry{
+				Name:     cmds[1],
+				Username: cmds[2],
+				Password: cmds[3],
+			}
 			ctx.db.Update(func(tx *bbolt.Tx) error {
-				bs, err := json.Marshal(map[string]string{
-					"username": username,
-					"password": password,
-					"name":     name,
-				})
+				bs, err := e.AsBytes()
 				if err != nil {
 					return err
 				}
@@ -49,7 +62,7 @@ func commandHandler(ctx *context) func(string) {
 						return err
 					}
 				}
-				err = bucket.Put([]byte(name), bs)
+				err = bucket.Put([]byte(e.Name), bs)
 				if err != nil {
 					return err
 				}
