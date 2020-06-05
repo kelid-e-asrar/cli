@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cli/storage"
 	"flag"
+	"passage_cli/storage"
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"

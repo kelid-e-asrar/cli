@@ -1,4 +1,4 @@
-module cli
+module passage_cli
 
 go 1.14
 
