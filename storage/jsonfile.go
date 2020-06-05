@@ -3,6 +3,9 @@ package storage
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 //JSONFile storage for passage.
@@ -15,9 +18,23 @@ const (
 	_DefaultJSONPath = "passage.json"
 )
 
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
 func NewJSONFile(path string) (*JSONFile, error) {
 	if path == "" {
 		path = _DefaultJSONPath
+	}
+	if !fileExists(path) {
+		f, err := os.Create(path)
+		if err != nil {
+			return nil, err
+		}
+		f.Close()
 	}
 	bs, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -26,7 +43,7 @@ func NewJSONFile(path string) (*JSONFile, error) {
 	vj := map[string]*PassageEntry{}
 	err = json.Unmarshal(bs, &vj)
 	if err != nil {
-		return nil, err
+		logrus.Errorln(err)
 	}
 	return &JSONFile{vj, path}, nil
 }

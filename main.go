@@ -38,7 +38,7 @@ func commandHandler(s storage.PassageStorage) func(string) {
 }
 
 func main() {
-	s, err := storage.NewPassageBBoltStorage("", "")
+	s, err := storage.NewJSONFile("")
 	if err != nil {
 		logrus.Fatalln(err)
 	}
