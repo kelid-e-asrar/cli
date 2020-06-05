@@ -36,7 +36,7 @@ func (p *BBolt) Set(entry *PassageEntry) error {
 
 //Get name from BBolt storage
 func (p *BBolt) Get(name string) (*PassageEntry, error) {
-	var entry *PassageEntry
+	entry := &PassageEntry{}
 	err := p.db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(p.bucketName)
 		if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"cli/storage"
+	"flag"
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
@@ -38,10 +39,25 @@ func commandHandler(s storage.PassageStorage) func(string) {
 }
 
 func main() {
-	s, err := storage.NewJSONFile("")
-	if err != nil {
-		logrus.Fatalln(err)
+	backend := flag.String("storage", "json", "storage=json")
+	flag.Parse()
+	var s storage.PassageStorage
+	logrus.Infoln(*backend)
+	var err error
+	switch *backend {
+	default:
+	case "json":
+		s, err = storage.NewJSONFile("")
+		if err != nil {
+			logrus.Fatalln(err)
+		}
+	case "bbolt":
+		s, err = storage.NewPassageBBoltStorage("", "")
+		if err != nil {
+			logrus.Fatalln(err)
+		}
 	}
+
 	defer s.Close()
 	p := prompt.New(commandHandler(s), completer)
 
