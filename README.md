@@ -1,2 +1,2 @@
-# cli
-cli of kelid-e-asrar
+# CLI implementaion for Passage
+Passage is a Password manager 
