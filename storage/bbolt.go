@@ -6,14 +6,14 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-//PassageBBoltStorage is an implementation for Passage storage interface.
-type PassageBBoltStorage struct {
+//BBolt is an implementation for Passage storage interface.
+type BBolt struct {
 	db         *bbolt.DB
 	bucketName []byte
 }
 
 //Set PassageEntry for given Name.
-func (p *PassageBBoltStorage) Set(entry *PassageEntry) error {
+func (p *BBolt) Set(entry *PassageEntry) error {
 	return p.db.Update(func(tx *bbolt.Tx) error {
 		bs, err := json.Marshal(entry)
 		if err != nil {
@@ -35,7 +35,7 @@ func (p *PassageBBoltStorage) Set(entry *PassageEntry) error {
 }
 
 //Get name from BBolt storage
-func (p *PassageBBoltStorage) Get(name string) (*PassageEntry, error) {
+func (p *BBolt) Get(name string) (*PassageEntry, error) {
 	var entry *PassageEntry
 	err := p.db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(p.bucketName)
@@ -54,6 +54,9 @@ func (p *PassageBBoltStorage) Get(name string) (*PassageEntry, error) {
 	}
 	return entry, nil
 }
+func (p *BBolt) Close() error {
+	return p.db.Close()
+}
 
 const (
 	_DefaultDB     = "passage.db"
@@ -61,7 +64,7 @@ const (
 )
 
 //Create a new PassageBBoltStorage
-func NewPassageBBoltStorage(dbPath string, bucketName string) (*PassageBBoltStorage, error) {
+func NewPassageBBoltStorage(dbPath string, bucketName string) (*BBolt, error) {
 	if dbPath == "" {
 		dbPath = _DefaultDB
 	}
@@ -72,7 +75,7 @@ func NewPassageBBoltStorage(dbPath string, bucketName string) (*PassageBBoltStor
 	if err != nil {
 		return nil, err
 	}
-	return &PassageBBoltStorage{
+	return &BBolt{
 		db,
 		[]byte(_DefaultBucket),
 	}, nil

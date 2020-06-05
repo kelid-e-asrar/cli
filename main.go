@@ -42,6 +42,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalln(err)
 	}
+	defer s.Close()
 	p := prompt.New(commandHandler(s), completer)
 
 	p.Run()

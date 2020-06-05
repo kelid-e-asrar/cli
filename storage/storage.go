@@ -11,4 +11,5 @@ type PassageEntry struct {
 type PassageStorage interface {
 	Set(entry *PassageEntry) error
 	Get(name string) (*PassageEntry, error)
+	Close() error
 }
